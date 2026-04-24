@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+HEAD
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
@@ -9,7 +9,7 @@ import ManageRanking from "./pages/ManageRanking";
 import ManagePoints from "./pages/ManagePoints";
 import ManageBadges from "./pages/ManageBadges";
 import ManageEvents from "./pages/ManageEvents";
-=======
+
 import React, { useState } from "react";
 import { FaUniversity, FaUserGraduate, FaTrophy, FaStar, FaAward, FaCalendar } from "react-icons/fa";
 
@@ -33,7 +33,7 @@ function Card({ title, icon }) {
     </div>
   );
 }
->>>>>>> dbff0c38120bac182350cb5afd3f055196deeedd
+
 
 function App() {
   return (
@@ -52,9 +52,8 @@ function App() {
   );
 }
 
-<<<<<<< HEAD
+ HEAD
 export default App;
-=======
 const styles = {
   container: {
     display: "flex",
@@ -117,4 +116,3 @@ const styles = {
 };
 
 export default App;
->>>>>>> dbff0c38120bac182350cb5afd3f055196deeedd
