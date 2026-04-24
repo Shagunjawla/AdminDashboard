@@ -8,6 +8,7 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/ranking", require("./routes/rankingRoutes"));
 
 // Routes
 app.use("/api/institutes", require("./routes/instituteRoutes"));
