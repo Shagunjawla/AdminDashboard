@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+
 const API = "http://localhost:5000/api/institutes";
 
 function ManageInstitutes() {
@@ -7,56 +8,106 @@ function ManageInstitutes() {
   const [editId, setEditId] = useState(null);
 
   const fetchData = () => {
-    fetch(API).then(res => res.json()).then(setData);
+    fetch(API)
+      .then((res) => res.json())
+      .then(setData);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const handleSubmit = () => {
-    if (!form.id || !form.name || !form.city) return alert("Fill all fields");
+  const handleSubmit = async () => {
+    if (!form.id || !form.name || !form.city)
+      return alert("Fill all fields");
 
     if (editId) {
-      fetch(`${API}/${editId}`, {
+      await fetch(`${API}/${editId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
-      }).then(() => { setEditId(null); setForm({ id:"",name:"",city:"" }); fetchData(); });
+      });
     } else {
-      fetch(API, {
+      await fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
-      }).then(() => { setForm({ id:"",name:"",city:"" }); fetchData(); });
+      });
     }
+
+    setEditId(null);
+    setForm({ id: "", name: "", city: "" });
+    fetchData();
   };
 
-  const handleDelete = (id) => {
-    fetch(`${API}/${id}`, { method: "DELETE" }).then(fetchData);
+  const handleDelete = async (id) => {
+    await fetch(`${API}/${id}`, { method: "DELETE" });
+    fetchData();
   };
 
   const handleEdit = (item) => {
-    setForm(item);
-    setEditId(item.id);
+    setForm({
+      id: item.id,
+      name: item.name,
+      city: item.city,
+    });
+    setEditId(item._id); // 🔥 important fix
   };
 
   return (
     <div style={styles.container}>
       <h1>Manage Institutes</h1>
 
-      <input placeholder="ID" value={form.id} onChange={e=>setForm({...form,id:e.target.value})}/>
-      <input placeholder="Name" value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/>
-      <input placeholder="City" value={form.city} onChange={e=>setForm({...form,city:e.target.value})}/>
-      <button onClick={handleSubmit}>{editId?"Update":"Add"}</button>
+      {/* FORM */}
+      <div style={{ marginBottom: "20px" }}>
+        <input
+          placeholder="ID"
+          value={form.id}
+          onChange={(e) =>
+            setForm({ ...form, id: e.target.value })
+          }
+        />
+        <input
+          placeholder="Name"
+          value={form.name}
+          onChange={(e) =>
+            setForm({ ...form, name: e.target.value })
+          }
+        />
+        <input
+          placeholder="City"
+          value={form.city}
+          onChange={(e) =>
+            setForm({ ...form, city: e.target.value })
+          }
+        />
+        <button onClick={handleSubmit}>
+          {editId ? "Update" : "Add"}
+        </button>
+      </div>
 
+      {/* TABLE */}
       <table style={styles.table}>
-        <thead><tr><th>ID</th><th>Name</th><th>City</th><th>Action</th></tr></thead>
+        <thead>
+          <tr>
+            <th style={styles.cell}>ID</th>
+            <th style={styles.cell}>Name</th>
+            <th style={styles.cell}>City</th>
+            <th style={styles.cell}>Action</th>
+          </tr>
+        </thead>
+
         <tbody>
-          {data.map((d,i)=>(
-            <tr key={i}>
-              <td>{d.id}</td><td>{d.name}</td><td>{d.city}</td>
-              <td>
-                <button onClick={()=>handleEdit(d)}>Edit</button>
-                <button onClick={()=>handleDelete(d.id)}>Delete</button>
+          {data.map((d) => (
+            <tr key={d._id}>
+              <td style={styles.cell}>{d.id}</td>
+              <td style={styles.cell}>{d.name}</td>
+              <td style={styles.cell}>{d.city}</td>
+              <td style={styles.cell}>
+                <button onClick={() => handleEdit(d)}>Edit</button>
+                <button onClick={() => handleDelete(d._id)}>
+                  Delete
+                </button>
               </td>
             </tr>
           ))}
@@ -66,5 +117,24 @@ function ManageInstitutes() {
   );
 }
 
-const styles = { container:{padding:"20px",background:"#000",color:"gold"}, table:{width:"100%",marginTop:"20px"} };
+// 🎨 STYLES FIX (CENTER ALIGN + BORDER)
+const styles = {
+  container: {
+    padding: "20px",
+    background: "#000",
+    color: "gold",
+    minHeight: "100vh",
+  },
+  table: {
+    width: "100%",
+    marginTop: "20px",
+    borderCollapse: "collapse",
+  },
+  cell: {
+    border: "1px solid gold",
+    padding: "10px",
+    textAlign: "center", // 🔥 यही fix था
+  },
+};
+
 export default ManageInstitutes;

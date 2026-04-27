@@ -1,10 +1,9 @@
 const mongoose = require("mongoose");
 
 const schema = new mongoose.Schema({
+  id: String,
   name: String,
-  type: String,
-  address: String,
-  verified: Boolean
+  city: String
 });
 
 module.exports = mongoose.model("Institute", schema);

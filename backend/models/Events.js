@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const schema = new mongoose.Schema({
   id: String,
-  points: Number
+  name: String
 });
 
-module.exports = mongoose.model("Points", schema);
+module.exports = mongoose.model("Event", schema);

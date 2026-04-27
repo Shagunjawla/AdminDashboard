@@ -1,33 +1,24 @@
 const express = require("express");
 const router = express.Router();
-const Student = require("../models/Student");
+const Ranking = require("../models/Ranking");
 
-// 🔥 Calculate Ranking
-router.get("/calculate", async (req, res) => {
-  try {
-    // Sort students by points (descending)
-    const students = await Student.find().sort({ points: -1 });
-
-    // Assign ranks
-    for (let i = 0; i < students.length; i++) {
-      students[i].rank = i + 1;
-      await students[i].save();
-    }
-
-    res.json({
-      message: "Ranking Updated Successfully",
-      data: students
-    });
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+router.get("/", async (req, res) => {
+  res.json(await Ranking.find());
 });
 
-// 🔥 Get Ranking List
-router.get("/", async (req, res) => {
-  const students = await Student.find().sort({ rank: 1 });
-  res.json(students);
+router.post("/", async (req, res) => {
+  const data = new Ranking(req.body);
+  await data.save();
+  res.json(data);
+});
+
+router.delete("/:id", async (req, res) => {
+  await Ranking.deleteOne({ id: req.params.id });
+  res.send("Deleted");
+});
+
+router.put("/:id", async (req, res) => {
+  res.json(await Ranking.updateOne({ id: req.params.id }, req.body));
 });
 
 module.exports = router;

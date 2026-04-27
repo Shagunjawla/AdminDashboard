@@ -7,60 +7,85 @@ function ManageStudents() {
   const [form, setForm] = useState({ id: "", name: "", department: "" });
   const [editId, setEditId] = useState(null);
 
-  // GET
+  // GET DATA
   const fetchData = () => {
     fetch(API)
-      .then(res => res.json())
-      .then(data => setStudents(data))
-      .catch(err => console.log(err));
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("DATA:", data); // 🔥 debug
+        setStudents(data);
+      })
+      .catch((err) => console.log(err));
   };
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  // ADD or UPDATE
-  const handleSubmit = () => {
+  // ADD / UPDATE
+  const handleSubmit = async () => {
     if (!form.id || !form.name || !form.department) {
       alert("Fill all fields");
       return;
     }
 
-    if (editId) {
-      // UPDATE
-      fetch(`${API}/${editId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      }).then(() => {
-        setEditId(null);
-        setForm({ id: "", name: "", department: "" });
-        fetchData();
-      });
-    } else {
-      // ADD
-      fetch(API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      }).then(() => {
-        setForm({ id: "", name: "", department: "" });
-        fetchData();
-      });
+    try {
+      let res;
+
+      if (editId) {
+        res = await fetch(`${API}/${editId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+      } else {
+        res = await fetch(API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+      }
+
+      const data = await res.json();
+      console.log("RESPONSE:", data); // 🔥 debug
+
+      setForm({ id: "", name: "", department: "" });
+      setEditId(null);
+      fetchData();
+    } catch (error) {
+      console.log(error);
     }
   };
 
   // DELETE
-  const handleDelete = (id) => {
-    fetch(`${API}/${id}`, {
-      method: "DELETE",
-    }).then(fetchData);
+  const handleDelete = async (id) => {
+    try {
+      console.log("Deleting ID:", id); // 🔥 debug
+
+      const res = await fetch(`${API}/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+      console.log("DELETE RESPONSE:", data);
+
+      fetchData();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  // EDIT (fill form)
+  // EDIT
   const handleEdit = (student) => {
-    setForm(student);
-    setEditId(student.id);
+    console.log("Editing:", student); // 🔥 debug
+
+    setForm({
+      id: student.id || "",
+      name: student.name || "",
+      department: student.department || "",
+    });
+
+    setEditId(student._id); // ✅ correct
   };
 
   return (
@@ -68,7 +93,7 @@ function ManageStudents() {
       <h1>Manage Students</h1>
 
       {/* FORM */}
-      <div>
+      <div style={{ marginBottom: "20px" }}>
         <input
           placeholder="ID"
           value={form.id}
@@ -82,7 +107,9 @@ function ManageStudents() {
         <input
           placeholder="Department"
           value={form.department}
-          onChange={(e) => setForm({ ...form, department: e.target.value })}
+          onChange={(e) =>
+            setForm({ ...form, department: e.target.value })
+          }
         />
 
         <button onClick={handleSubmit}>
@@ -94,22 +121,24 @@ function ManageStudents() {
       <table style={styles.table}>
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Department</th>
-            <th>Action</th>
+            <th style={styles.cell}>ID</th>
+            <th style={styles.cell}>Name</th>
+            <th style={styles.cell}>Department</th>
+            <th style={styles.cell}>Action</th>
           </tr>
         </thead>
 
         <tbody>
-          {students.map((s, i) => (
-            <tr key={i}>
-              <td>{s.id}</td>
-              <td>{s.name}</td>
-              <td>{s.department}</td>
-              <td>
+          {students.map((s) => (
+            <tr key={s._id}>
+              <td style={styles.cell}>{s.id}</td>
+              <td style={styles.cell}>{s.name}</td>
+              <td style={styles.cell}>{s.department}</td>
+              <td style={styles.cell}>
                 <button onClick={() => handleEdit(s)}>Edit</button>
-                <button onClick={() => handleDelete(s.id)}>Delete</button>
+                <button onClick={() => handleDelete(s._id)}>
+                  Delete
+                </button>
               </td>
             </tr>
           ))}
@@ -119,6 +148,7 @@ function ManageStudents() {
   );
 }
 
+// 🎨 STYLES
 const styles = {
   container: {
     padding: "20px",
@@ -130,6 +160,11 @@ const styles = {
     width: "100%",
     marginTop: "20px",
     borderCollapse: "collapse",
+  },
+  cell: {
+    border: "1px solid gold",
+    padding: "10px",
+    textAlign: "center",
   },
 };
 
