@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Institute = require("../models/Institute");
+const Institute = require("../models/Institutes");
 
 router.get("/", async (req, res) => {
   res.json(await Institute.find());
