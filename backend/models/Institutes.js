@@ -1,9 +1,14 @@
 const mongoose = require("mongoose");
 
-const schema = new mongoose.Schema({
-  id: String,
-  name: String,
-  city: String
+const instituteSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  city: {
+    type: String,
+    required: true
+  }
 });
 
-module.exports = mongoose.model("Institute", schema);
+module.exports = mongoose.model("Institute", instituteSchema);
