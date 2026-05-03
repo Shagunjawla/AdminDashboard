@@ -67,7 +67,7 @@ function Dashboard() {
         </div>
 
         {/* 🔥 Heading */}
-        <h1 style={styles.heading}>Welcome to TechMNHub 🚀</h1>
+        <h1 style={styles.heading}>Welcome to TechMNHub </h1>
 
         {/* 🔥 Cards */}
         <div style={styles.grid}>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaPlus, FaSearch, FaEdit, FaTrash } from "react-icons/fa";
 import Modal from "../components/Modal";
 
-const API = "http://localhost:5000/api/ranking";
+const API = "http://localhost:5000/api/leaderboard/global";
 
 function ManageRanking() {
   const [data, setData] = useState([]);
@@ -10,9 +10,12 @@ function ManageRanking() {
   const [showModal, setShowModal] = useState(false);
 
   const [form, setForm] = useState({
-    id: "",
-    rank: "",
-    score: "",
+    name: "",
+    school: "",
+    xp: "",
+    level: "",
+    badge: "",
+    streak: "",
   });
 
   const [editId, setEditId] = useState(null);
@@ -28,31 +31,38 @@ function ManageRanking() {
   }, []);
 
   const handleSubmit = async () => {
-    if (!form.id || !form.rank || !form.score)
-      return alert("Fill all fields");
+    if (!form.name || !form.xp) return alert("Fill required fields");
 
-    if (editId) {
-      await fetch(`${API}/${editId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-    } else {
-      await fetch(API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-    }
+    const url = editId
+      ? `http://localhost:5000/api/users/${editId}`
+      : `http://localhost:5000/api/users`;
 
-    setForm({ id: "", rank: "", score: "" });
+    const method = editId ? "PUT" : "POST";
+
+    await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+
+    setForm({
+      name: "",
+      school: "",
+      xp: "",
+      level: "",
+      badge: "",
+      streak: "",
+    });
+
     setEditId(null);
     setShowModal(false);
     fetchData();
   };
 
   const handleDelete = async (id) => {
-    await fetch(`${API}/${id}`, { method: "DELETE" });
+    await fetch(`http://localhost:5000/api/users/${id}`, {
+      method: "DELETE",
+    });
     fetchData();
   };
 
@@ -63,25 +73,31 @@ function ManageRanking() {
   };
 
   const filtered = data.filter((d) =>
-    d.id.toLowerCase().includes(search.toLowerCase())
+    d.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div style={styles.container}>
-
       {/* HEADER */}
       <div style={styles.header}>
-        <h2 style={styles.heading}>Ranking System</h2>
+        <h2 style={styles.heading}>🏆 Ranking System</h2>
 
         <button
           style={styles.addBtn}
           onClick={() => {
-            setForm({ id: "", rank: "", score: "" });
+            setForm({
+              name: "",
+              school: "",
+              xp: "",
+              level: "",
+              badge: "",
+              streak: "",
+            });
             setEditId(null);
             setShowModal(true);
           }}
         >
-          <FaPlus /> Add Rank
+          <FaPlus /> Add Student
         </button>
       </div>
 
@@ -89,7 +105,7 @@ function ManageRanking() {
       <div style={styles.searchBox}>
         <FaSearch />
         <input
-          placeholder="Search by ID..."
+          placeholder="Search by Name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={styles.input}
@@ -101,19 +117,28 @@ function ManageRanking() {
         <table style={styles.table}>
           <thead>
             <tr>
-              <th>ID</th>
               <th>Rank</th>
-              <th>Score</th>
+              <th>Name</th>
+              <th>School</th>
+              <th>XP</th>
+              <th>Level</th>
+              <th>Badge</th>
+              <th> Streak</th>
               <th>Action</th>
             </tr>
           </thead>
 
           <tbody>
-            {filtered.map((d) => (
+            {filtered.map((d, index) => (
               <tr key={d._id}>
-                <td>{d.id}</td>
-                <td>{d.rank}</td>
-                <td>{d.score}</td>
+                <td>#{index + 1}</td>
+                <td>{d.name}</td>
+                <td>{d.school}</td>
+                <td>{d.xp}</td>
+                <td>{d.level}</td>
+                <td>{d.badge}</td>
+                <td>{d.streak}</td>
+
                 <td>
                   <button
                     style={styles.editBtn}
@@ -137,26 +162,47 @@ function ManageRanking() {
 
       {/* MODAL */}
       <Modal show={showModal} onClose={() => setShowModal(false)}>
-        <h2>{editId ? "Update Rank" : "Add Rank"}</h2>
+        <h2>{editId ? "Update Student" : "Add Student"}</h2>
 
         <input
-          placeholder="ID"
-          value={form.id}
-          onChange={(e) => setForm({ ...form, id: e.target.value })}
+          placeholder="Name"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
           style={styles.modalInput}
         />
 
         <input
-          placeholder="Rank"
-          value={form.rank}
-          onChange={(e) => setForm({ ...form, rank: e.target.value })}
+          placeholder="School"
+          value={form.school}
+          onChange={(e) => setForm({ ...form, school: e.target.value })}
           style={styles.modalInput}
         />
 
         <input
-          placeholder="Score"
-          value={form.score}
-          onChange={(e) => setForm({ ...form, score: e.target.value })}
+          placeholder="XP"
+          value={form.xp}
+          onChange={(e) => setForm({ ...form, xp: e.target.value })}
+          style={styles.modalInput}
+        />
+
+        <input
+          placeholder="Level"
+          value={form.level}
+          onChange={(e) => setForm({ ...form, level: e.target.value })}
+          style={styles.modalInput}
+        />
+
+        <input
+          placeholder="Badge"
+          value={form.badge}
+          onChange={(e) => setForm({ ...form, badge: e.target.value })}
+          style={styles.modalInput}
+        />
+
+        <input
+          placeholder="Streak"
+          value={form.streak}
+          onChange={(e) => setForm({ ...form, streak: e.target.value })}
           style={styles.modalInput}
         />
 
@@ -169,26 +215,22 @@ function ManageRanking() {
 }
 
 export default ManageRanking;
-
-
-// 🎨 STYLES
 const styles = {
   container: {
-    marginLeft: "000px",
     padding: "30px",
     background: "linear-gradient(135deg, #020617, #0f172a)",
     minHeight: "100vh",
     color: "#fff",
   },
 
-  heading: {
-    color: "#facc15",
-  },
-
   header: {
     display: "flex",
     justifyContent: "space-between",
     marginBottom: "20px",
+  },
+
+  heading: {
+    color: "#facc15",
   },
 
   addBtn: {

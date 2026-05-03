@@ -10,15 +10,18 @@ app.use(express.json());
 /* ✅ IMPORT ALL ROUTES */
 const studentsRoutes = require("./routes/studentsRoutes");
 const institutesRoutes = require("./routes/institutesRoutes");
-const rankingRoutes = require("./routes/rankingRoutes");
 const pointsRoutes = require("./routes/pointsRoutes");
 const badgesRoutes = require("./routes/badgesRoutes");
 const eventsRoutes = require("./routes/eventsRoutes");
+const userRoutes = require("./routes/userRoutes");
+const leaderboardRoutes = require("./routes/leaderboardRoutes");
+
 
 /* ✅ USE ALL ROUTES */
-app.use("/api/students", studentsRoutes);
+app.use("/api/students", studentsRoutes)
 app.use("/api/institutes", institutesRoutes);
-app.use("/api/ranking", rankingRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/points", pointsRoutes);
 app.use("/api/badges", badgesRoutes);
 app.use("/api/events", eventsRoutes);
