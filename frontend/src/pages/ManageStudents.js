@@ -1,21 +1,27 @@
 import React, { useEffect, useState } from "react";
+import { FaPlus, FaSearch, FaEdit, FaTrash } from "react-icons/fa";
+import Modal from "../components/Modal";
 
 const API = "http://localhost:5000/api/students";
 
 function ManageStudents() {
   const [students, setStudents] = useState([]);
-  const [form, setForm] = useState({ id: "", name: "", department: "" });
+  const [search, setSearch] = useState("");
+  const [showModal, setShowModal] = useState(false);
+
+  const [form, setForm] = useState({
+    id: "",
+    name: "",
+    department: "",
+  });
+
   const [editId, setEditId] = useState(null);
 
-  // GET DATA
+  // FETCH
   const fetchData = () => {
     fetch(API)
       .then((res) => res.json())
-      .then((data) => {
-        console.log("DATA:", data); // 🔥 debug
-        setStudents(data);
-      })
-      .catch((err) => console.log(err));
+      .then(setStudents);
   };
 
   useEffect(() => {
@@ -24,148 +30,244 @@ function ManageStudents() {
 
   // ADD / UPDATE
   const handleSubmit = async () => {
-    if (!form.id || !form.name || !form.department) {
-      alert("Fill all fields");
-      return;
+    if (!form.id || !form.name || !form.department)
+      return alert("Fill all fields");
+
+    if (editId) {
+      await fetch(`${API}/${editId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+    } else {
+      await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
     }
 
-    try {
-      let res;
-
-      if (editId) {
-        res = await fetch(`${API}/${editId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-      } else {
-        res = await fetch(API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-      }
-
-      const data = await res.json();
-      console.log("RESPONSE:", data); // 🔥 debug
-
-      setForm({ id: "", name: "", department: "" });
-      setEditId(null);
-      fetchData();
-    } catch (error) {
-      console.log(error);
-    }
+    setForm({ id: "", name: "", department: "" });
+    setEditId(null);
+    setShowModal(false);
+    fetchData();
   };
 
   // DELETE
   const handleDelete = async (id) => {
-    try {
-      console.log("Deleting ID:", id); // 🔥 debug
-
-      const res = await fetch(`${API}/${id}`, {
-        method: "DELETE",
-      });
-
-      const data = await res.json();
-      console.log("DELETE RESPONSE:", data);
-
-      fetchData();
-    } catch (error) {
-      console.log(error);
-    }
+    await fetch(`${API}/${id}`, { method: "DELETE" });
+    fetchData();
   };
 
   // EDIT
   const handleEdit = (student) => {
-    console.log("Editing:", student); // 🔥 debug
-
-    setForm({
-      id: student.id || "",
-      name: student.name || "",
-      department: student.department || "",
-    });
-
-    setEditId(student._id); // ✅ correct
+    setForm(student);
+    setEditId(student._id);
+    setShowModal(true);
   };
+
+  const filtered = students.filter((s) =>
+    s.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div style={styles.container}>
-      <h1>Manage Students</h1>
 
-      {/* FORM */}
-      <div style={{ marginBottom: "20px" }}>
+      {/* HEADER */}
+      <div style={styles.header}>
+        <h2 style={styles.heading}>Manage Student</h2>
+
+        <button
+          style={styles.addBtn}
+          onClick={() => {
+            setForm({ id: "", name: "", department: "" });
+            setEditId(null);
+            setShowModal(true);
+          }}
+        >
+          <FaPlus /> Add Student
+        </button>
+      </div>
+
+      {/* SEARCH */}
+      <div style={styles.searchBox}>
+        <FaSearch />
+        <input
+          placeholder="Search student..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={styles.input}
+        />
+      </div>
+
+      {/* TABLE */}
+      <div style={styles.tableCard}>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Department</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filtered.map((s) => (
+              <tr key={s._id}>
+                <td>{s.id}</td>
+                <td>{s.name}</td>
+                <td>{s.department}</td>
+                <td>
+                  <button
+                    style={styles.editBtn}
+                    onClick={() => handleEdit(s)}
+                  >
+                    <FaEdit />
+                  </button>
+
+                  <button
+                    style={styles.deleteBtn}
+                    onClick={() => handleDelete(s._id)}
+                  >
+                    <FaTrash />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* MODAL */}
+      <Modal show={showModal} onClose={() => setShowModal(false)}>
+        <h2>{editId ? "Update Student" : "Add Student"}</h2>
+
         <input
           placeholder="ID"
           value={form.id}
           onChange={(e) => setForm({ ...form, id: e.target.value })}
+          style={styles.modalInput}
         />
+
         <input
           placeholder="Name"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
+          style={styles.modalInput}
         />
+
         <input
           placeholder="Department"
           value={form.department}
           onChange={(e) =>
             setForm({ ...form, department: e.target.value })
           }
+          style={styles.modalInput}
         />
 
-        <button onClick={handleSubmit}>
-          {editId ? "Update" : "Add"}
+        <button onClick={handleSubmit} style={styles.saveBtn}>
+          {editId ? "Update" : "Save"}
         </button>
-      </div>
-
-      {/* TABLE */}
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            <th style={styles.cell}>ID</th>
-            <th style={styles.cell}>Name</th>
-            <th style={styles.cell}>Department</th>
-            <th style={styles.cell}>Action</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {students.map((s) => (
-            <tr key={s._id}>
-              <td style={styles.cell}>{s.id}</td>
-              <td style={styles.cell}>{s.name}</td>
-              <td style={styles.cell}>{s.department}</td>
-              <td style={styles.cell}>
-                <button onClick={() => handleEdit(s)}>Edit</button>
-                <button onClick={() => handleDelete(s._id)}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      </Modal>
     </div>
   );
 }
 
+export default ManageStudents;
+
+
 // 🎨 STYLES
 const styles = {
   container: {
-    padding: "20px",
-    background: "#000",
-    color: "gold",
+    marginLeft: "000px",
+    padding: "30px",
+    background: "linear-gradient(135deg, #020617, #0f172a)",
     minHeight: "100vh",
+    color: "#fff",
   },
+
+  heading: {
+    color: "#facc15",
+  },
+
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: "20px",
+  },
+
+  addBtn: {
+    background: "gold",
+    border: "none",
+    padding: "10px 15px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontWeight: "bold",
+  },
+
+  searchBox: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    background: "#1e293b",
+    padding: "10px",
+    borderRadius: "8px",
+    marginBottom: "20px",
+  },
+
+  input: {
+    flex: 1,
+    background: "transparent",
+    border: "none",
+    outline: "none",
+    color: "#fff",
+  },
+
+  tableCard: {
+    background: "#1e293b",
+    padding: "20px",
+    borderRadius: "10px",
+  },
+
   table: {
     width: "100%",
-    marginTop: "20px",
+    textAlign: "center",
     borderCollapse: "collapse",
   },
-  cell: {
-    border: "1px solid gold",
+
+  editBtn: {
+    background: "orange",
+    border: "none",
+    padding: "6px",
+    marginRight: "5px",
+    borderRadius: "5px",
+    cursor: "pointer",
+  },
+
+  deleteBtn: {
+    background: "red",
+    border: "none",
+    padding: "6px",
+    borderRadius: "5px",
+    cursor: "pointer",
+  },
+
+  modalInput: {
+    width: "100%",
     padding: "10px",
-    textAlign: "center",
+    margin: "10px 0",
+    borderRadius: "6px",
+    border: "none",
+  },
+
+  saveBtn: {
+    width: "100%",
+    background: "gold",
+    padding: "10px",
+    border: "none",
+    borderRadius: "6px",
+    fontWeight: "bold",
+    cursor: "pointer",
   },
 };
-
-export default ManageStudents;

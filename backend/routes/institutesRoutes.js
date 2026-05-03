@@ -1,13 +1,23 @@
 const express = require("express");
 const router = express.Router();
 const Institute = require("../models/Institutes");
-const Institutes = require("../models/Institutes");
 
 
 // ✅ GET ALL INSTITUTES
 router.get("/", async (req, res) => {
     try {
-        const data = await Institutes.find();
+        const data = await Institute.find();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// ✅ GET SINGLE INSTITUTE
+router.get("/:id", async (req, res) => {
+    try {
+        const data = await Institute.findById(req.params.id);
         res.json(data);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -18,34 +28,14 @@ router.get("/", async (req, res) => {
 // ✅ ADD INSTITUTE
 router.post("/", async (req, res) => {
     try {
-        const { name, city } = req.body;
+        console.log("BODY:", req.body); // debug
 
-        const newInstitute = new Institute({
-            name,
-            city
-        });
+        const newInstitute = new Institute(req.body);
+        const saved = await newInstitute.save();
 
-        const savedData = await newInstitute.save();
-        res.status(201).json(savedData);
-
+        res.json(saved);
     } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-
-// ✅ GET SINGLE INSTITUTE BY ID
-router.get("/:id", async (req, res) => {
-    try {
-        const data = await Institute.findById(req.params.id);
-
-        if (!data) {
-            return res.status(404).json({ message: "Institute not found" });
-        }
-
-        res.json(data);
-
-    } catch (error) {
+        console.log(error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -54,16 +44,15 @@ router.get("/:id", async (req, res) => {
 // ✅ UPDATE INSTITUTE
 router.put("/:id", async (req, res) => {
     try {
-        const updatedData = await Institutes.findByIdAndUpdate(
+        const updated = await Institute.findByIdAndUpdate(
             req.params.id,
             req.body,
             { new: true }
         );
 
-        res.json(updatedData);
-
+        res.json(updated);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -71,12 +60,12 @@ router.put("/:id", async (req, res) => {
 // ✅ DELETE INSTITUTE
 router.delete("/:id", async (req, res) => {
     try {
-        await Institutes.findByIdAndDelete(req.params.id);
+        await Institute.findByIdAndDelete(req.params.id);
         res.json({ message: "Institute deleted successfully" });
-
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
+
 
 module.exports = router;

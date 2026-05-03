@@ -11,3 +11,13 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.hover-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 15px 30px rgba(255, 215, 0, 0.3);
+  border: 1px solid gold;
+}
+
+p:hover {
+  background: rgba(255, 215, 0, 0.1);
+}
