@@ -10,80 +10,141 @@ function ManageInstitutes() {
   const [showModal, setShowModal] = useState(false);
 
   const [form, setForm] = useState({
-    id: "",
+    cellId: "",
     name: "",
     city: "",
   });
 
   const [editId, setEditId] = useState(null);
 
-  // 📥 FETCH DATA
-  const fetchData = () => {
-    fetch(API)
-      .then((res) => res.json())
-      .then(setData)
-      .catch((err) => console.log(err));
+  // ✅ FETCH DATA
+  const fetchData = async () => {
+    try {
+      const res = await fetch(API);
+
+      const result = await res.json();
+
+      console.log("API RESPONSE:", result);
+
+      // ✅ FIXED
+      setData(result.data || result);
+
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  // 🚀 SUBMIT (FIXED)
+  // ✅ SUBMIT
   const handleSubmit = async () => {
-    if (!form.id || !form.name || !form.city)
-      return alert("Fill all fields");
 
-    // ✅ clean data (NO _id)
+    if (!form.cellId || !form.name || !form.city) {
+      return alert("Please fill all fields");
+    }
+
     const cleanData = {
-      id: form.id,
+      cellId: form.cellId,
       name: form.name,
       city: form.city,
     };
 
     try {
+
+      let response;
+
+      // ✅ UPDATE
       if (editId) {
-        await fetch(`${API}/${editId}`, {
+
+        response = await fetch(`${API}/${editId}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(cleanData),
         });
+
       } else {
-        await fetch(API, {
+
+        // ✅ ADD
+        response = await fetch(API, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(cleanData),
         });
       }
 
+      const result = await response.json();
+
+      console.log(result);
+
+      // ✅ SUCCESS MESSAGE
+      alert(result.message || "Success");
+
+      // ✅ RESET
+      setForm({
+        cellId: "",
+        name: "",
+        city: "",
+      });
+
       setEditId(null);
-      setForm({ id: "", name: "", city: "" });
+
       setShowModal(false);
+
+      // ✅ RELOAD DATA
       fetchData();
+
     } catch (error) {
       console.log(error);
     }
   };
 
-  // ❌ DELETE
+  // ✅ DELETE
   const handleDelete = async (id) => {
-    await fetch(`${API}/${id}`, { method: "DELETE" });
-    fetchData();
+
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+
+      const res = await fetch(`${API}/${id}`, {
+        method: "DELETE",
+      });
+
+      const result = await res.json();
+
+      alert(result.message);
+
+      fetchData();
+
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  // ✏️ EDIT (🔥 FIXED)
+  // ✅ EDIT
   const handleEdit = (item) => {
+
     setForm({
-      id: item.id,
+      cellId: item.cellId,
       name: item.name,
       city: item.city,
-    }); // ✅ NO _id
+    });
 
     setEditId(item._id);
+
     setShowModal(true);
   };
 
-  // 🔍 SEARCH
+  // ✅ SEARCH FILTER
   const filtered = data.filter((d) =>
     d.name?.toLowerCase().includes(search.toLowerCase())
   );
@@ -93,24 +154,38 @@ function ManageInstitutes() {
 
       {/* HEADER */}
       <div style={styles.header}>
-        <h2 style={styles.heading}>Manage Institutes</h2>
+
+        <h2 style={styles.heading}>
+          Manage Institutes
+        </h2>
 
         <button
           style={styles.addBtn}
           onClick={() => {
-            setForm({ id: "", name: "", city: "" });
+
+            setForm({
+              cellId: "",
+              name: "",
+              city: "",
+            });
+
             setEditId(null);
+
             setShowModal(true);
           }}
         >
-          <FaPlus /> Add Institute
+          <FaPlus />
+          Add Institute
         </button>
       </div>
 
       {/* SEARCH */}
       <div style={styles.searchBox}>
-        <FaSearch />
+
+        <FaSearch color="#facc15" />
+
         <input
+          type="text"
           placeholder="Search institute..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -120,71 +195,149 @@ function ManageInstitutes() {
 
       {/* TABLE */}
       <div style={styles.tableCard}>
+
         <table style={styles.table}>
+
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>City</th>
-              <th>Action</th>
+              <th style={styles.th}>Cell ID</th>
+              <th style={styles.th}>Institute Name</th>
+              <th style={styles.th}>City</th>
+              <th style={styles.th}>Action</th>
             </tr>
           </thead>
 
           <tbody>
-            {filtered.map((d) => (
-              <tr key={d._id}>
-                <td>{d.id}</td>
-                <td>{d.name}</td>
-                <td>{d.city}</td>
-                <td>
-                  <button
-                    style={styles.editBtn}
-                    onClick={() => handleEdit(d)}
-                  >
-                    <FaEdit />
-                  </button>
 
-                  <button
-                    style={styles.deleteBtn}
-                    onClick={() => handleDelete(d._id)}
-                  >
-                    <FaTrash />
-                  </button>
+            {filtered.length > 0 ? (
+
+              filtered.map((d) => (
+
+                <tr key={d._id} style={styles.tr}>
+
+                  <td style={styles.td}>
+                    {d.cellId}
+                  </td>
+
+                  <td style={styles.td}>
+                    {d.name}
+                  </td>
+
+                  <td style={styles.td}>
+                    {d.city}
+                  </td>
+
+                  <td style={styles.td}>
+
+                    <button
+                      style={styles.editBtn}
+                      onClick={() => handleEdit(d)}
+                    >
+                      <FaEdit />
+                    </button>
+
+                    <button
+                      style={styles.deleteBtn}
+                      onClick={() => handleDelete(d._id)}
+                    >
+                      <FaTrash />
+                    </button>
+
+                  </td>
+
+                </tr>
+              ))
+
+            ) : (
+
+              <tr>
+                <td
+                  colSpan="4"
+                  style={{
+                    padding: "20px",
+                    textAlign: "center",
+                    color: "#94a3b8",
+                  }}
+                >
+                  No Institutes Found
                 </td>
               </tr>
-            ))}
+
+            )}
+
           </tbody>
         </table>
       </div>
 
       {/* MODAL */}
-      <Modal show={showModal} onClose={() => setShowModal(false)}>
-        <h2>{editId ? "Update Institute" : "Add Institute"}</h2>
+      <Modal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+      >
 
+        <h2
+          style={{
+            color: "#facc15",
+            marginBottom: "20px",
+          }}
+        >
+          {editId
+            ? "Update Institute"
+            : "Add Institute"}
+        </h2>
+
+        {/* CELL ID */}
         <input
-          placeholder="ID"
-          value={form.id}
-          onChange={(e) => setForm({ ...form, id: e.target.value })}
+          type="text"
+          placeholder="Cell ID"
+          value={form.cellId}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              cellId: e.target.value,
+            })
+          }
           style={styles.modalInput}
         />
 
+        {/* NAME */}
         <input
-          placeholder="Name"
+          type="text"
+          placeholder="Institute Name"
           value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              name: e.target.value,
+            })
+          }
           style={styles.modalInput}
         />
 
+        {/* CITY */}
         <input
+          type="text"
           placeholder="City"
           value={form.city}
-          onChange={(e) => setForm({ ...form, city: e.target.value })}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              city: e.target.value,
+            })
+          }
           style={styles.modalInput}
         />
 
-        <button onClick={handleSubmit} style={styles.saveBtn}>
-          {editId ? "Update" : "Save"}
+        {/* SAVE BUTTON */}
+        <button
+          onClick={handleSubmit}
+          style={styles.saveBtn}
+        >
+          {editId
+            ? "Update Institute"
+            : "Save Institute"}
         </button>
+
       </Modal>
     </div>
   );
@@ -195,30 +348,40 @@ export default ManageInstitutes;
 
 // 🎨 STYLES
 const styles = {
+
   container: {
     padding: "30px",
-    color: "#fff",
-    background: "linear-gradient(135deg, #020617, #0f172a)",
     minHeight: "100vh",
-  },
-
-  heading: {
-    color: "#facc15",
+    background:
+      "linear-gradient(135deg, #020617, #0f172a)",
+    color: "#fff",
   },
 
   header: {
     display: "flex",
     justifyContent: "space-between",
-    marginBottom: "20px",
+    alignItems: "center",
+    marginBottom: "25px",
+  },
+
+  heading: {
+    color: "#facc15",
+    fontSize: "28px",
+    fontWeight: "bold",
   },
 
   addBtn: {
-    background: "gold",
+    background:
+      "linear-gradient(135deg, #facc15, #eab308)",
     border: "none",
-    padding: "10px 15px",
-    borderRadius: "8px",
+    padding: "12px 18px",
+    borderRadius: "10px",
     cursor: "pointer",
     fontWeight: "bold",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    color: "#000",
   },
 
   searchBox: {
@@ -226,9 +389,10 @@ const styles = {
     alignItems: "center",
     gap: "10px",
     background: "#1e293b",
-    padding: "10px",
-    borderRadius: "8px",
-    marginBottom: "20px",
+    padding: "12px",
+    borderRadius: "10px",
+    marginBottom: "25px",
+    border: "1px solid #334155",
   },
 
   input: {
@@ -237,52 +401,78 @@ const styles = {
     border: "none",
     outline: "none",
     color: "#fff",
+    fontSize: "15px",
   },
 
   tableCard: {
     background: "#1e293b",
-    padding: "20px",
-    borderRadius: "10px",
+    borderRadius: "14px",
+    overflow: "hidden",
+    boxShadow: "0 0 15px rgba(0,0,0,0.4)",
   },
 
   table: {
     width: "100%",
-    textAlign: "center",
     borderCollapse: "collapse",
   },
 
+  th: {
+    background: "#0f172a",
+    color: "#facc15",
+    padding: "16px",
+    textAlign: "center",
+    borderBottom: "1px solid #334155",
+  },
+
+  tr: {
+    borderBottom: "1px solid #334155",
+  },
+
+  td: {
+    padding: "14px",
+    textAlign: "center",
+  },
+
   editBtn: {
-    background: "orange",
+    background: "#f59e0b",
     border: "none",
-    padding: "6px",
-    marginRight: "5px",
-    borderRadius: "5px",
+    padding: "8px 10px",
+    borderRadius: "6px",
     cursor: "pointer",
+    marginRight: "8px",
+    color: "#fff",
   },
 
   deleteBtn: {
-    background: "red",
+    background: "#ef4444",
     border: "none",
-    padding: "6px",
-    borderRadius: "5px",
+    padding: "8px 10px",
+    borderRadius: "6px",
     cursor: "pointer",
+    color: "#fff",
   },
 
   modalInput: {
     width: "100%",
-    padding: "10px",
-    margin: "10px 0",
-    borderRadius: "6px",
-    border: "none",
+    padding: "12px",
+    marginBottom: "15px",
+    borderRadius: "8px",
+    border: "1px solid #334155",
+    background: "#0f172a",
+    color: "#fff",
+    outline: "none",
   },
 
   saveBtn: {
     width: "100%",
-    background: "gold",
-    padding: "10px",
+    background:
+      "linear-gradient(135deg, #facc15, #eab308)",
     border: "none",
-    borderRadius: "6px",
+    padding: "12px",
+    borderRadius: "8px",
     fontWeight: "bold",
     cursor: "pointer",
+    color: "#000",
+    fontSize: "15px",
   },
 };

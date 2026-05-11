@@ -1,259 +1,463 @@
-import React, { useEffect, useState } from "react";
-import { FaPlus, FaSearch, FaEdit, FaTrash } from "react-icons/fa";
-import Modal from "../components/Modal";
-
-const API = "http://localhost:5000/api/points";
+import React, { useState } from "react";
 
 function ManagePoints() {
-  const [data, setData] = useState([]);
-  const [search, setSearch] = useState("");
-  const [showModal, setShowModal] = useState(false);
 
+  // ======================================
+  // STUDENT LIST STATE
+  // ======================================
+  const [students, setStudents] = useState([]);
+
+  // ======================================
+  // FORM STATE
+  // ======================================
   const [form, setForm] = useState({
-    id: "",
-    points: "",
+
+    studentId: "",
+    studentName: "",
+
+    attendance: false,
+    assignment: false,
+    quizMarks: 0,
+    project: false,
+    event: false,
+    streak: 0,
+
   });
 
-  const [editId, setEditId] = useState(null);
+  // ======================================
+  // AUTO POINT CALCULATION
+  // ======================================
+  const calculatePoints = () => {
 
-  const fetchData = () => {
-    fetch(API)
-      .then((res) => res.json())
-      .then(setData);
-  };
+    let total = 0;
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const handleSubmit = async () => {
-    if (!form.id || !form.points)
-      return alert("Fill all fields");
-
-    if (editId) {
-      await fetch(`${API}/${editId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-    } else {
-      await fetch(API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+    if (form.attendance) {
+      total += 10;
     }
 
-    setForm({ id: "", points: "" });
-    setEditId(null);
-    setShowModal(false);
-    fetchData();
+    if (form.assignment) {
+      total += 50;
+    }
+
+    total += Number(form.quizMarks) * 2;
+
+    if (form.project) {
+      total += 200;
+    }
+
+    if (form.event) {
+      total += 100;
+    }
+
+    total += Number(form.streak) * 5;
+
+    return total;
   };
 
-  const handleDelete = async (id) => {
-    await fetch(`${API}/${id}`, { method: "DELETE" });
-    fetchData();
+  // ======================================
+  // ADD STUDENT
+  // ======================================
+  const addStudent = () => {
+
+    if (
+      !form.studentId ||
+      !form.studentName
+    ) {
+      return alert(
+        "Enter Student ID & Name"
+      );
+    }
+
+    const newStudent = {
+
+      id: Date.now(),
+
+      studentId: form.studentId,
+
+      studentName: form.studentName,
+
+      points: calculatePoints(),
+
+      attendance: form.attendance,
+
+      assignment: form.assignment,
+
+      quizMarks: form.quizMarks,
+
+      project: form.project,
+
+      event: form.event,
+
+      streak: form.streak,
+
+    };
+
+    setStudents([
+      ...students,
+      newStudent,
+    ]);
+
+    // RESET FORM
+    setForm({
+
+      studentId: "",
+      studentName: "",
+
+      attendance: false,
+      assignment: false,
+      quizMarks: 0,
+      project: false,
+      event: false,
+      streak: 0,
+
+    });
   };
 
-  const handleEdit = (item) => {
-    setForm(item);
-    setEditId(item._id);
-    setShowModal(true);
-  };
+  // ======================================
+  // DELETE STUDENT
+  // ======================================
+  const deleteStudent = (id) => {
 
-  const filtered = data.filter((d) =>
-    d.id.toLowerCase().includes(search.toLowerCase())
-  );
+    const filtered =
+      students.filter(
+        (s) => s.id !== id
+      );
+
+    setStudents(filtered);
+  };
 
   return (
     <div style={styles.container}>
 
-      {/* HEADER */}
-      <div style={styles.header}>
-        <h2 style={styles.heading}>Points System</h2>
+      {/* FORM CARD */}
+      <div style={styles.card}>
 
+        <h1 style={styles.heading}>
+          ⚡ Student Points System
+        </h1>
+
+        {/* STUDENT ID */}
+        <div style={styles.inputGroup}>
+          <label>Student ID</label>
+
+          <input
+            type="text"
+            placeholder="Enter Student ID"
+            value={form.studentId}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                studentId:
+                  e.target.value,
+              })
+            }
+            style={styles.input}
+          />
+        </div>
+
+        {/* STUDENT NAME */}
+        <div style={styles.inputGroup}>
+          <label>Student Name</label>
+
+          <input
+            type="text"
+            placeholder="Enter Student Name"
+            value={form.studentName}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                studentName:
+                  e.target.value,
+              })
+            }
+            style={styles.input}
+          />
+        </div>
+
+        {/* ATTENDANCE */}
+        <label style={styles.label}>
+          <input
+            type="checkbox"
+            checked={form.attendance}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                attendance:
+                  e.target.checked,
+              })
+            }
+          />
+          Attendance (+10)
+        </label>
+
+        {/* ASSIGNMENT */}
+        <label style={styles.label}>
+          <input
+            type="checkbox"
+            checked={form.assignment}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                assignment:
+                  e.target.checked,
+              })
+            }
+          />
+          Assignment (+50)
+        </label>
+
+        {/* QUIZ */}
+        <div style={styles.inputGroup}>
+          <label>Quiz Marks</label>
+
+          <input
+            type="number"
+            placeholder="Enter Quiz Marks"
+            value={form.quizMarks}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                quizMarks:
+                  e.target.value,
+              })
+            }
+            style={styles.input}
+          />
+        </div>
+
+        {/* PROJECT */}
+        <label style={styles.label}>
+          <input
+            type="checkbox"
+            checked={form.project}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                project:
+                  e.target.checked,
+              })
+            }
+          />
+          Project (+200)
+        </label>
+
+        {/* EVENT */}
+        <label style={styles.label}>
+          <input
+            type="checkbox"
+            checked={form.event}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                event:
+                  e.target.checked,
+              })
+            }
+          />
+          Event (+100)
+        </label>
+
+        {/* STREAK */}
+        <div style={styles.inputGroup}>
+          <label>Streak Days</label>
+
+          <input
+            type="number"
+            placeholder="Enter Streak"
+            value={form.streak}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                streak:
+                  e.target.value,
+              })
+            }
+            style={styles.input}
+          />
+        </div>
+
+        {/* LIVE POINTS */}
+        <div style={styles.pointsBox}>
+
+          <h2>
+            Total Points
+          </h2>
+
+          <h1 style={styles.points}>
+            {calculatePoints()}
+          </h1>
+
+        </div>
+
+        {/* ADD BUTTON */}
         <button
           style={styles.addBtn}
-          onClick={() => {
-            setForm({ id: "", points: "" });
-            setEditId(null);
-            setShowModal(true);
-          }}
+          onClick={addStudent}
         >
-          <FaPlus /> Add Points
+          Add Student
         </button>
+
       </div>
 
-      {/* SEARCH */}
-      <div style={styles.searchBox}>
-        <FaSearch />
-        <input
-          placeholder="Search by ID..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={styles.input}
-        />
-      </div>
+      {/* STUDENT LIST */}
+      <div style={styles.listCard}>
 
-      {/* TABLE */}
-      <div style={styles.tableCard}>
+        <h2 style={styles.listHeading}>
+          📋 Student List
+        </h2>
+
         <table style={styles.table}>
+
           <thead>
             <tr>
               <th>ID</th>
+              <th>Name</th>
               <th>Points</th>
               <th>Action</th>
             </tr>
           </thead>
 
           <tbody>
-            {filtered.map((d) => (
-              <tr key={d._id}>
-                <td>{d.id}</td>
-                <td>{d.points}</td>
+
+            {students.map((student) => (
+
+              <tr key={student.id}>
+
                 <td>
-                  <button
-                    style={styles.editBtn}
-                    onClick={() => handleEdit(d)}
-                  >
-                    <FaEdit />
-                  </button>
+                  {student.studentId}
+                </td>
+
+                <td>
+                  {student.studentName}
+                </td>
+
+                <td>
+                  {student.points}
+                </td>
+
+                <td>
 
                   <button
                     style={styles.deleteBtn}
-                    onClick={() => handleDelete(d._id)}
+                    onClick={() =>
+                      deleteStudent(
+                        student.id
+                      )
+                    }
                   >
-                    <FaTrash />
+                    Delete
                   </button>
+
                 </td>
+
               </tr>
             ))}
+
           </tbody>
+
         </table>
+
       </div>
-
-      {/* MODAL */}
-      <Modal show={showModal} onClose={() => setShowModal(false)}>
-        <h2>{editId ? "Update Points" : "Add Points"}</h2>
-
-        <input
-          placeholder="ID"
-          value={form.id}
-          onChange={(e) => setForm({ ...form, id: e.target.value })}
-          style={styles.modalInput}
-        />
-
-        <input
-          placeholder="Points"
-          value={form.points}
-          onChange={(e) =>
-            setForm({ ...form, points: e.target.value })
-          }
-          style={styles.modalInput}
-        />
-
-        <button onClick={handleSubmit} style={styles.saveBtn}>
-          {editId ? "Update" : "Save"}
-        </button>
-      </Modal>
     </div>
   );
 }
 
 export default ManagePoints;
 
-
-// 🎨 STYLES
+// ==========================================
+// STYLES
+// ==========================================
 const styles = {
+
   container: {
-    marginLeft: "000px",
-    padding: "30px",
-    background: "linear-gradient(135deg, #020617, #0f172a)",
     minHeight: "100vh",
+    background:
+      "linear-gradient(135deg,#020617,#0f172a)",
+    padding: "30px",
     color: "#fff",
   },
 
-  heading: {
-    color: "#facc15",
-  },
-
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: "20px",
-  },
-
-  addBtn: {
-    background: "gold",
-    border: "none",
-    padding: "10px 15px",
-    borderRadius: "8px",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-
-  searchBox: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
+  card: {
+    maxWidth: "600px",
+    margin: "auto",
     background: "#1e293b",
-    padding: "10px",
-    borderRadius: "8px",
+    padding: "30px",
+    borderRadius: "20px",
+    marginBottom: "30px",
+  },
+
+  heading: {
+    textAlign: "center",
+    color: "#facc15",
+    marginBottom: "25px",
+  },
+
+  inputGroup: {
     marginBottom: "20px",
   },
 
   input: {
-    flex: 1,
-    background: "transparent",
+    width: "100%",
+    padding: "12px",
+    borderRadius: "10px",
     border: "none",
-    outline: "none",
-    color: "#fff",
+    marginTop: "8px",
   },
 
-  tableCard: {
+  label: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "15px",
+  },
+
+  pointsBox: {
+    background: "#0f172a",
+    padding: "20px",
+    borderRadius: "15px",
+    textAlign: "center",
+    marginTop: "20px",
+    border: "2px solid #facc15",
+  },
+
+  points: {
+    fontSize: "50px",
+    color: "#facc15",
+  },
+
+  addBtn: {
+    width: "100%",
+    marginTop: "20px",
+    padding: "14px",
+    background: "#facc15",
+    border: "none",
+    borderRadius: "10px",
+    fontWeight: "bold",
+    cursor: "pointer",
+  },
+
+  listCard: {
     background: "#1e293b",
     padding: "20px",
-    borderRadius: "10px",
+    borderRadius: "20px",
+  },
+
+  listHeading: {
+    color: "#facc15",
+    marginBottom: "20px",
   },
 
   table: {
     width: "100%",
-    textAlign: "center",
     borderCollapse: "collapse",
-  },
-
-  editBtn: {
-    background: "orange",
-    border: "none",
-    padding: "6px",
-    marginRight: "5px",
-    borderRadius: "5px",
-    cursor: "pointer",
+    textAlign: "center",
   },
 
   deleteBtn: {
     background: "red",
+    color: "#fff",
     border: "none",
-    padding: "6px",
-    borderRadius: "5px",
-    cursor: "pointer",
-  },
-
-  modalInput: {
-    width: "100%",
-    padding: "10px",
-    margin: "10px 0",
-    borderRadius: "6px",
-    border: "none",
-  },
-
-  saveBtn: {
-    width: "100%",
-    background: "gold",
-    padding: "10px",
-    border: "none",
-    borderRadius: "6px",
-    fontWeight: "bold",
+    padding: "8px 12px",
+    borderRadius: "8px",
     cursor: "pointer",
   },
 };
